@@ -102,14 +102,28 @@ inline Maybe<bool> Set(
   return obj->Set(isolate->GetCurrentContext(), index, value);
 }
 
-inline Maybe<bool> ForceSet(
+inline Maybe<bool> DefineOwnProperty(
+    v8::Local<v8::Object> obj
+  , v8::Local<v8::String> key
+  , v8::Local<v8::Value> value
+  , v8::PropertyAttribute attribs = v8::None) {
+  v8::Isolate *isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope scope(isolate);
+  return obj->DefineOwnProperty(isolate->GetCurrentContext(), key, value,
+                                attribs);
+}
+
+NAN_DEPRECATED inline Maybe<bool> ForceSet(
     v8::Local<v8::Object> obj
   , v8::Local<v8::Value> key
   , v8::Local<v8::Value> value
   , v8::PropertyAttribute attribs = v8::None) {
   v8::Isolate *isolate = v8::Isolate::GetCurrent();
   v8::HandleScope scope(isolate);
-  return obj->ForceSet(isolate->GetCurrentContext(), key, value, attribs);
+  return key->IsName()
+             ? obj->DefineOwnProperty(isolate->GetCurrentContext(),
+                                      key.As<v8::Name>(), value, attribs)
+             : Nothing<bool>();
 }
 
 inline MaybeLocal<v8::Value> Get(
